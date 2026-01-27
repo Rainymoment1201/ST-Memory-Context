@@ -34,6 +34,7 @@
     const CK = 'gg_config';            // 通用配置存储键
     const CWK = 'gg_col_widths';       // 列宽存储键
     const SMK = 'gg_summarized';       // 已总结行标记存储键
+    const UIK = 'gg_user_info';        // 【关于用户】全局存储键
     const REPO_PATH = 'gaigai315/ST-Memory-Context';  // GitHub仓库路径
 
     // ===== UI主题配置 =====
@@ -73,6 +74,7 @@
         cloudSync: true,
         syncWorldInfo: false,          // ❌ 默认关闭世界书同步
         worldInfoVectorized: false,    // ❌ 默认关闭世界书自带向量化（已移除UI选项）
+        persistUserInfo: false,        // ❌ 默认关闭【关于用户】跨会话记忆
         // ==================== 独立向量检索配置 ====================
         vectorEnabled: false,          // ❌ 默认关闭独立向量检索
         vectorProvider: 'openai',      // 向量服务提供商
@@ -1342,6 +1344,7 @@
                     filterTagsWhite: C.filterTagsWhite,
                     syncWorldInfo: C.syncWorldInfo,
                     worldInfoVectorized: C.worldInfoVectorized,
+                    persistUserInfo: C.persistUserInfo,
                     // ✅ 向量检索配置
                     vectorEnabled: C.vectorEnabled,
                     vectorUrl: C.vectorUrl,
@@ -1356,6 +1359,9 @@
 
             try {
                 localStorage.setItem(`${SK}_${id}`, JSON.stringify(data));
+
+                // ✨ 保存【关于用户】到全局存储（如果开启）
+                this.saveUserInfoGlobal();
 
                 // 🔥 [优化版] 自动备份机制：创建时间戳备份供"恢复数据"功能使用
                 const backupKey = `gg_data_${id}_${now}`;
@@ -1493,6 +1499,9 @@
                 localStorage.setItem(AK, JSON.stringify(API_CONFIG));
 
                 console.log(`🔄 [会话切换] ID: ${id}，已重置所有状态`);
+
+                // ✨ 加载【关于用户】全局记忆（如果开启）
+                this.loadUserInfoGlobal();
             }
 
             let cloudData = null;
@@ -1587,6 +1596,7 @@
                 C.filterTagsWhite = globalConfig.filterTagsWhite !== undefined ? globalConfig.filterTagsWhite : '';
                 C.syncWorldInfo = globalConfig.syncWorldInfo !== undefined ? globalConfig.syncWorldInfo : false;
                 C.worldInfoVectorized = globalConfig.worldInfoVectorized !== undefined ? globalConfig.worldInfoVectorized : false;
+                C.persistUserInfo = globalConfig.persistUserInfo !== undefined ? globalConfig.persistUserInfo : false;
                 // ✅ 向量检索配置
                 C.vectorEnabled = globalConfig.vectorEnabled !== undefined ? globalConfig.vectorEnabled : false;
                 C.vectorUrl = globalConfig.vectorUrl !== undefined ? globalConfig.vectorUrl : '';
@@ -1677,10 +1687,96 @@
 
         ctx() { return (typeof SillyTavern !== 'undefined' && SillyTavern.getContext) ? SillyTavern.getContext() : null; }
 
+        // ==================== 【关于用户】全局记忆管理 ====================
+
+        /**
+         * 保存【关于用户】表格数据到全局存储
+         */
+        saveUserInfoGlobal() {
+            if (!C.persistUserInfo) return; // 未开启跨会话记忆，不保存
+
+            const userInfoSheet = this.s[8]; // 第8号表格是【关于用户】
+            if (!userInfoSheet || userInfoSheet.r.length === 0) {
+                console.log('📝 [关于用户] 表格为空，跳过全局保存');
+                return;
+            }
+
+            try {
+                const data = {
+                    rows: userInfoSheet.r,
+                    lastUpdate: new Date().toISOString()
+                };
+                localStorage.setItem(UIK, JSON.stringify(data));
+                console.log(`✅ [关于用户] 已保存到全局存储 (${userInfoSheet.r.length} 行)`);
+            } catch (e) {
+                console.error('❌ [关于用户] 保存失败:', e);
+            }
+        }
+
+        /**
+         * 从全局存储加载【关于用户】表格数据
+         */
+        loadUserInfoGlobal() {
+            if (!C.persistUserInfo) {
+                console.log('📝 [关于用户] 跨会话记忆已关闭，使用当前会话数据');
+                return;
+            }
+
+            try {
+                const stored = localStorage.getItem(UIK);
+                if (!stored) {
+                    console.log('📝 [关于用户] 无全局数据');
+                    return;
+                }
+
+                const data = JSON.parse(stored);
+                const userInfoSheet = this.s[8]; // 第8号表格是【关于用户】
+
+                if (data.rows && Array.isArray(data.rows) && data.rows.length > 0) {
+                    userInfoSheet.r = data.rows;
+                    console.log(`✅ [关于用户] 已从全局存储加载 (${data.rows.length} 行，最后更新: ${data.lastUpdate})`);
+                }
+            } catch (e) {
+                console.error('❌ [关于用户] 加载失败:', e);
+            }
+        }
+
+        /**
+         * 清除【关于用户】表格数据（仅当前会话）
+         */
+        clearUserInfoLocal() {
+            const userInfoSheet = this.s[8];
+            if (userInfoSheet) {
+                userInfoSheet.r = [];
+                console.log('🗑️ [关于用户] 当前会话数据已清空');
+            }
+        }
+
+        /**
+         * 清除【关于用户】全局存储
+         */
+        clearUserInfoGlobal() {
+            try {
+                localStorage.removeItem(UIK);
+                console.log('🗑️ [关于用户] 全局数据已清空');
+            } catch (e) {
+                console.error('❌ [关于用户] 清除全局数据失败:', e);
+            }
+        }
+
         getTableText() { return this.s.slice(0, -1).map((s, i) => s.txt(i)).filter(t => t).join('\n'); }
 
         pmt() {
             let result = '';
+
+            // ✨ 优先注入【关于用户】信息（如果有）
+            const userInfoSheet = this.s[8]; // 第8号表格是【关于用户】
+            if (userInfoSheet && userInfoSheet.r.length > 0) {
+                result += '=== 👤 关于用户（重要！请优先记住这些信息） ===\n\n';
+                result += userInfoSheet.txt(8);
+                result += '\n=== 用户信息结束 ===\n\n';
+            }
+
             if (this.sm.has()) {
                 result += '=== 📚 记忆总结（历史压缩数据，仅供参考） ===\n\n' + this.sm.load() + '\n\n=== 总结结束 ===\n\n';
             }
@@ -9400,6 +9496,29 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
 
             ${window.Gaigai.WI.getSettingsUI(m.wiConfig)}
 
+            <!-- ✨✨✨ 新增：【关于用户】跨会话记忆 ✨✨✨ -->
+            <div style="margin-top: 12px; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 12px;">
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight: 600;">
+                    <input type="checkbox" id="gg_c_persist_user_info" ${C.persistUserInfo ? 'checked' : ''}>
+                    <span>👤 启用【关于用户】跨会话记忆</span>
+                </label>
+                <div style="font-size: 10px; color: #666; margin-top: 6px; margin-left: 22px; line-height: 1.6;">
+                    开启后,【关于用户】表格的内容将在所有对话间共享。<br>
+                    <strong>• 开启：</strong>切换对话时会自动加载之前记录的用户信息<br>
+                    <strong>• 关闭：</strong>每个对话独立记录用户信息,互不影响
+                </div>
+
+                <!-- 操作按钮区域 -->
+                <div style="margin-top: 8px; display: flex; gap: 6px;">
+                    <button id="gg_btn_clear_user_info_local" style="background: #ff9800; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-trash"></i> 清空当前会话用户信息
+                    </button>
+                    <button id="gg_btn_clear_user_info_global" style="background: #f44336; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-trash-can"></i> 清空全局用户信息
+                    </button>
+                </div>
+            </div>
+
             <!-- ✨✨✨ 新增：手动覆盖按钮区域 ✨✨✨ -->
             <div style="margin-top: 8px; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 8px; display: flex; align-items: center; justify-content: flex-end;">
                 <button id="gg_btn_force_sync_wi" style="background: #ff9800; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
@@ -9797,6 +9916,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                 C.syncWorldInfo = $('#gg_c_sync_wi').is(':checked');
                 C.vectorEnabled = $('#gg_c_vector_enabled').is(':checked');
                 C.autoVectorizeSummary = $('#gg_c_auto_vectorize').is(':checked');
+                C.persistUserInfo = $('#gg_c_persist_user_info').is(':checked');
 
                 // ✅ 保存世界书自定义配置
                 m.wiConfig.bookName = $('#gg_wi_book_name').val().trim();
@@ -9938,6 +10058,26 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
 
             $('#gg_open_api').on('click', () => navTo('AI总结配置', shapi));
             $('#gg_open_pmt').on('click', () => navTo('提示词管理', window.Gaigai.PromptManager.showPromptManager));
+
+            // ✨✨✨ 【关于用户】按钮事件绑定 ✨✨✨
+            $('#gg_btn_clear_user_info_local').off('click').on('click', async function () {
+                if (!await customConfirm('确定清空当前会话的【关于用户】数据吗？\n\n⚠️ 此操作仅清空当前对话，不影响全局记忆。\n\n如果开启了跨会话记忆，切换对话后仍会加载全局数据。', '清空当前会话')) return;
+
+                m.clearUserInfoLocal();
+                m.save();
+                refreshTable();
+                await customAlert('✅ 当前会话的【关于用户】数据已清空。', '清空成功');
+            });
+
+            $('#gg_btn_clear_user_info_global').off('click').on('click', async function () {
+                if (!await customConfirm('⚠️ 危险操作 ⚠️\n\n确定清空全局的【关于用户】数据吗？\n\n这将删除所有对话共享的用户信息记忆！\n\n建议：如果只想清空当前对话，请使用左侧的"清空当前会话"按钮。', '清空全局数据')) return;
+
+                m.clearUserInfoGlobal();
+                m.clearUserInfoLocal();
+                m.save();
+                refreshTable();
+                await customAlert('✅ 全局【关于用户】数据已清空。\n\n所有对话将重新开始记录用户信息。', '清空成功');
+            });
 
             // ✨✨✨ 强制覆盖世界书 (手动绑定版) ✨✨✨
             $('#gg_btn_force_sync_wi').off('click').on('click', async function () {
