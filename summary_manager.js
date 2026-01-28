@@ -881,11 +881,7 @@
             window.isSummarizing = true;
 
             try {
-                if (API_CONFIG.useIndependentAPI) {
-                    result = await window.Gaigai.tools.callIndependentAPI(messages);
-                } else {
-                    result = await window.Gaigai.tools.callTavernAPI(messages);
-                }
+                result = await window.Gaigai.tools.callIndependentAPI(messages);
             } finally {
                 window.isSummarizing = false;
             }

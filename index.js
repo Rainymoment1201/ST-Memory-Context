@@ -87,7 +87,6 @@
     // 用于独立API调用（批量填表、自动总结等AI功能）
     let API_CONFIG = {
         enableAI: false,
-        useIndependentAPI: false,
         provider: 'openai',
         apiUrl: '',
         apiKey: '',
@@ -7905,128 +7904,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
         return { success: true, summary: content.trim() };
     }
 
-
-    async function callTavernAPI(prompt) {
-        try {
-            const context = m.ctx();
-            if (!context) return { success: false, error: '无法访问酒馆上下文' };
-
-            console.log('🚀 [酒馆API] 准备发送...');
-
-            // 1. 智能格式转换工具
-            const convertPromptToString = (input) => {
-                if (typeof input === 'string') return input;
-                if (Array.isArray(input)) {
-                    return input.map(m => {
-                        const role = m.role === 'system' ? 'System' : (m.role === 'user' ? 'User' : 'Model');
-                        return `### ${role}:\n${m.content}`;
-                    }).join('\n\n') + '\n\n### Model:\n';
-                }
-                return String(input);
-            };
-
-            // 2. 检测是否为 Gemini 模型 (根据配置的模型名判断)
-            // 如果配置里写了 gemini，或者当前酒馆选的模型名字里带 gemini
-            const currentModel = API_CONFIG.model || 'unknown';
-            const isGemini = currentModel.toLowerCase().includes('gemini');
-
-            let finalPrompt = prompt;
-
-            // ❌ [已禁用] Gemini 格式转换导致手机端返回空内容
-            // 现代 SillyTavern 已支持 Gemini 的 messages 数组格式，不需要转换
-            // if (isGemini) {
-            //     console.log('✨ 检测到 Gemini 模型，正在将数组转换为纯文本以兼容酒馆后端...');
-            //     finalPrompt = convertPromptToString(prompt);
-            // } else {
-            //     // 对于 OpenAI 等其他模型，确保是数组
-            //     if (!Array.isArray(prompt)) {
-            //         finalPrompt = [{ role: 'user', content: prompt }];
-            //     }
-            // }
-
-            // ✅ 统一处理：确保 prompt 是数组格式
-            if (!Array.isArray(prompt)) {
-                finalPrompt = [{ role: 'user', content: String(prompt) }];
-            }
-
-            if (isGemini) {
-                console.log('🛡️ 检测到 Gemini 模型，使用标准 messages 数组格式');
-            }
-
-            // 3. 调用酒馆接口
-            if (typeof context.generateRaw === 'function') {
-                let result;
-                try {
-                    // 构建生成参数
-                    const generateParams = {
-                        prompt: finalPrompt, // 👈 这里的格式已经根据模型自动适配了
-                        images: [],
-                        quiet: true,
-                        dryRun: false,
-                        skip_save: true,
-
-                        // 🛡️ 纯净模式：关闭所有干扰项
-                        include_world_info: false,
-                        include_jailbreak: false,
-                        include_character_card: false,
-                        include_names: false,
-
-                        // ✅ 使用酒馆界面设置的回复长度，完全尊重用户在 SillyTavern 的配置
-                        max_tokens: context.max_response_length,
-                        length: context.max_response_length,
-
-                        // ✅✅✅ 清空停止符，防止遇到人名就截断
-                        stop: [],
-                        stop_sequence: []
-                    };
-
-                    // ✅ 仅当模型名包含 'gemini' 时才添加安全设置
-                    if (isGemini) {
-                        generateParams.safety_settings = [
-                            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-                            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-                            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-                            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-                            { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' }
-                        ];
-                    }
-
-                    result = await context.generateRaw(generateParams);
-                    console.log('✅ [直连] 调用成功');
-                } catch (err) {
-                    console.error('❌ 酒馆API调用失败:', err);
-                    return { success: false, error: err.message };
-                }
-
-                // 4. 解析结果
-                let summary = '';
-                if (typeof result === 'string') summary = result;
-                else if (result && result.text) summary = result.text;
-                else if (result && result.content) summary = result.content;
-                else if (result && result.body && result.body.text) summary = result.body.text;
-
-                // 移除思考过程 (带回退保护)
-                if (summary && summary.includes('</think>')) {
-                    const raw = summary;
-                    const cleaned = summary
-                        .replace(/<think>[\s\S]*?<\/think>/gi, '')  // 移除标准成对
-                        .replace(/^[\s\S]*?<\/think>/i, '')         // 移除残缺开头
-                        .trim();
-                    // 如果清洗后为空，保留原文
-                    summary = cleaned || raw;
-                }
-
-                if (summary && summary.trim()) return { success: true, summary };
-            }
-
-            return { success: false, error: '酒馆API未返回有效文本或版本不支持数组调用' };
-
-        } catch (err) {
-            console.error('❌ [酒馆API] 致命错误:', err);
-            return { success: false, error: `API报错: ${err.message}` };
-        }
-    }
-
     function shtm() {
         // 1. 确保 UI.fs 有默认值，防止为空
         if (!UI.fs || isNaN(UI.fs)) UI.fs = 12;
@@ -8292,12 +8169,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
     <div class="g-p">
         <h4>🤖 AI 总结配置</h4>
 
-        <fieldset style="border:1px solid #ddd; padding:10px; border-radius:4px; margin-bottom:12px;">
-            <legend style="font-size:11px; font-weight:600;">🚀 API 模式</legend>
-            <label><input type="radio" name="gg_api_mode" value="independent" ${API_CONFIG.useIndependentAPI ? 'checked' : ''}> 使用独立API</label>
-        </fieldset>
-
-        <fieldset id="api-config-section" style="border:1px solid #ddd; padding:10px; border-radius:4px; margin-bottom:12px; ${API_CONFIG.useIndependentAPI ? '' : 'opacity:0.5; pointer-events:none;'}">
+        <fieldset id="api-config-section" style="border:1px solid #ddd; padding:10px; border-radius:4px; margin-bottom:12px;">
             <legend style="font-size:11px; font-weight:600;">独立API配置</legend>
 
             <label>API提供商：</label>
@@ -8345,7 +8217,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
 
         <div style="display:flex; gap:10px;">
             <button id="gg_save_api" style="flex:1; padding:6px 12px; background:${UI.c}; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:11px;">💾 保存设置</button>
-            <button id="gg_test_api" style="flex:1; padding:6px 12px; background:#17a2b8; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:11px;" ${API_CONFIG.useIndependentAPI ? '' : 'disabled'}>🧪 测试连接</button>
+            <button id="gg_test_api" style="flex:1; padding:6px 12px; background:#17a2b8; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:11px;">🧪 测试连接</button>
         </div>
     </div>`;
 
@@ -8364,17 +8236,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                 } else {
                     $input.attr('type', 'password');
                     $icon.removeClass('fa-eye-slash').addClass('fa-eye');
-                }
-            });
-
-            $('input[name="gg_api_mode"]').on('change', function () {
-                const isIndependent = $(this).val() === 'independent';
-                if (isIndependent) {
-                    $('#api-config-section').css({ 'opacity': '1', 'pointer-events': 'auto' });
-                    $('#gg_test_api').prop('disabled', false);
-                } else {
-                    $('#api-config-section').css({ 'opacity': '0.5', 'pointer-events': 'none' });
-                    $('#gg_test_api').prop('disabled', true);
                 }
             });
 
@@ -8688,7 +8549,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
             });
 
             $('#gg_save_api').on('click', async function () {
-                API_CONFIG.useIndependentAPI = $('input[name="gg_api_mode"]:checked').val() === 'independent';
                 API_CONFIG.provider = $('#gg_api_provider').val();
 
                 // ✅ URL 清理：去除首尾空格和末尾斜杠，保存干净的 Base URL
@@ -8726,7 +8586,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                     const currentModel = ($('#gg_api_model').val() || '').trim();
                     const currentMaxTokens = parseInt($('#gg_api_max_tokens').val()) || 8192;
                     const currentProvider = $('#gg_api_provider').val();
-                    const currentMode = $('input[name="gg_api_mode"]:checked').val() === 'independent';
 
                     // 验证必填项
                     if (!currentModel) {
@@ -8754,8 +8613,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                         apiKey: API_CONFIG.apiKey,
                         model: API_CONFIG.model,
                         maxTokens: API_CONFIG.maxTokens,
-                        provider: API_CONFIG.provider,
-                        useIndependentAPI: API_CONFIG.useIndependentAPI
+                        provider: API_CONFIG.provider
                     };
 
                     console.log('🧪 [API测试] 使用配置:', {
@@ -8776,7 +8634,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                         API_CONFIG.model = currentModel;
                         API_CONFIG.maxTokens = currentMaxTokens;
                         API_CONFIG.provider = currentProvider;
-                        API_CONFIG.useIndependentAPI = currentMode;
 
                         const testPrompt = "请简短回复：API连接测试是否成功？";
                         const result = await callIndependentAPI(testPrompt);
@@ -8815,7 +8672,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                         API_CONFIG.model = backup.model;
                         API_CONFIG.maxTokens = backup.maxTokens;
                         API_CONFIG.provider = backup.provider;
-                        API_CONFIG.useIndependentAPI = backup.useIndependentAPI;
 
                         btn.text(originalText).prop('disabled', false);
                     }
@@ -11873,7 +11729,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
     // 所有工具函数统一挂载到 window.Gaigai.tools 下，避免全局命名空间污染
     window.Gaigai.tools = {
         callIndependentAPI,
-        callTavernAPI,
         prs,
         exe,
         filterContentByTags  // 🔧 添加内容过滤函数，供 backfill_manager 和 summary_manager 使用

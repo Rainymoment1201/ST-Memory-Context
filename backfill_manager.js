@@ -1080,18 +1080,14 @@ ${lastError.message}
             window.Gaigai.lastRequestData = {
                 chat: JSON.parse(JSON.stringify(messages)),
                 timestamp: Date.now(),
-                model: window.Gaigai.config.useIndependentAPI ? window.Gaigai.config.model : 'Tavern(Direct)'
+                model: window.Gaigai.config.model
             };
 
             let result;
             window.isSummarizing = true;
             try {
                 // ✅ 直接调用 API，不自动重试
-                if (window.Gaigai.config.useIndependentAPI) {
-                    result = await window.Gaigai.tools.callIndependentAPI(messages);
-                } else {
-                    result = await window.Gaigai.tools.callTavernAPI(messages);
-                }
+                result = await window.Gaigai.tools.callIndependentAPI(messages);
             } catch (e) {
                 console.error('❌ 请求失败', e);
 
@@ -1402,17 +1398,13 @@ ${lastError.message}
             window.Gaigai.lastRequestData = {
                 chat: JSON.parse(JSON.stringify(messages)),
                 timestamp: Date.now(),
-                model: API_CONFIG.useIndependentAPI ? API_CONFIG.model : 'Tavern(Direct)'
+                model: API_CONFIG.model
             };
 
             let result;
             window.isSummarizing = true;
             try {
-                if (API_CONFIG.useIndependentAPI) {
-                    result = await window.Gaigai.tools.callIndependentAPI(messages);
-                } else {
-                    result = await window.Gaigai.tools.callTavernAPI(messages);
-                }
+                result = await window.Gaigai.tools.callIndependentAPI(messages);
             } catch (e) {
                 console.error('❌ 请求失败', e);
 
@@ -2178,15 +2170,14 @@ ${lastError.message}
             window.Gaigai.lastRequestData = {
                 chat: JSON.parse(JSON.stringify(messages)),
                 timestamp: Date.now(),
-                model: window.Gaigai.config.useIndependentAPI ? window.Gaigai.config.model : 'Tavern(Direct)'
+                model: window.Gaigai.config.model
             };
 
             // 调用 API
             let result;
             window.isSummarizing = true;
             try {
-                if (window.Gaigai.config.useIndependentAPI) result = await window.Gaigai.tools.callIndependentAPI(messages);
-                else result = await window.Gaigai.tools.callTavernAPI(messages);
+                result = await window.Gaigai.tools.callIndependentAPI(messages);
             } finally {
                 window.isSummarizing = false;
             }
