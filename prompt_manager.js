@@ -1514,33 +1514,7 @@ insertRow(0, {0: "2024年3月16日", 1: "凌晨(00:10)", 2: "", 3: "在古神殿
         const currentProfile = profilesData.profiles[currentProfileId];
         const currentData = currentProfile.data;
 
-        const h = `
-            <style>
-                /* 隐藏原生单选按钮（使用绝对定位和opacity，保持可访问性） */
-                input[name="pmt-sum-type"] {
-                    position: absolute;
-                    opacity: 0;
-                    width: 0;
-                    height: 0;
-                    margin: 0;
-                    padding: 0;
-                }
-
-                /* label的基础样式会在内联样式中定义 */
-                /* 这里只定义状态变化相关的样式 */
-                label[id^="gg_tab_label"].gg-tab-active {
-                    background: rgba(40, 167, 69, 0.2) !important;
-                    border-color: #28a745 !important;
-                    opacity: 1 !important;
-                    font-weight: 600;
-                }
-
-                /* label hover效果 */
-                label[id^="gg_tab_label"]:hover {
-                    opacity: 0.9 !important;
-                }
-            </style>
-            <div class="g-p" style="display: flex; flex-direction: column; gap: 15px;">
+        const h = `<div class="g-p" style="display: flex; flex-direction: column; gap: 15px;">
             <h4 style="margin:0 0 5px 0; opacity:0.8;">📝 提示词管理</h4>
 
             <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 12px; border: 1px solid rgba(255,255,255,0.2);">
@@ -1554,21 +1528,21 @@ insertRow(0, {0: "2024年3月16日", 1: "凌晨(00:10)", 2: "", 3: "在古神殿
                     <span>📝 总结/批量提示词</span>
 
                     <div style="display: flex; background: rgba(127, 127, 127, 0.15); padding: 4px; border-radius: 8px; gap: 4px;">
-                        <label style="flex: 1; text-align: center; justify-content: center; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; color: ${window.Gaigai.ui.tc}; opacity: 0.7; display: flex; align-items: center; border: 1px solid transparent; position: relative;" id="gg_tab_label_table">
+                        <label style="flex: 1; text-align: center; justify-content: center; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; color: ${window.Gaigai.ui.tc}; opacity: 0.7; display: flex; align-items: center; border: 1px solid transparent;" id="gg_tab_label_table">
                             <input type="radio" name="pmt-sum-type" value="table" checked>
-                            <span>📊 表格总结</span>
+                            📊 表格总结
                         </label>
-                        <label style="flex: 1; text-align: center; justify-content: center; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; color: ${window.Gaigai.ui.tc}; opacity: 0.7; display: flex; align-items: center; border: 1px solid transparent; position: relative;" id="gg_tab_label_chat">
+                        <label style="flex: 1; text-align: center; justify-content: center; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; color: ${window.Gaigai.ui.tc}; opacity: 0.7; display: flex; align-items: center; border: 1px solid transparent;" id="gg_tab_label_chat">
                             <input type="radio" name="pmt-sum-type" value="chat">
-                            <span>💬 聊天总结</span>
+                            💬 聊天总结
                         </label>
-                        <label style="flex: 1; text-align: center; justify-content: center; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; color: ${window.Gaigai.ui.tc}; opacity: 0.7; display: flex; align-items: center; border: 1px solid transparent; position: relative;" id="gg_tab_label_backfill_full">
+                        <label style="flex: 1; text-align: center; justify-content: center; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; color: ${window.Gaigai.ui.tc}; opacity: 0.7; display: flex; align-items: center; border: 1px solid transparent;" id="gg_tab_label_backfill_full">
                             <input type="radio" name="pmt-sum-type" value="backfill-full">
-                            <span>⚡ 批量填表 (含表8)</span>
+                            ⚡ 批量填表 (含表8)
                         </label>
-                        <label style="flex: 1; text-align: center; justify-content: center; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; color: ${window.Gaigai.ui.tc}; opacity: 0.7; display: flex; align-items: center; border: 1px solid transparent; position: relative;" id="gg_tab_label_backfill_lite">
+                        <label style="flex: 1; text-align: center; justify-content: center; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; color: ${window.Gaigai.ui.tc}; opacity: 0.7; display: flex; align-items: center; border: 1px solid transparent;" id="gg_tab_label_backfill_lite">
                             <input type="radio" name="pmt-sum-type" value="backfill-lite">
-                            <span>⚡ 批量填表 (无表8)</span>
+                            ⚡ 批量填表 (无表8)
                         </label>
                     </div>
                 </div>
@@ -1726,10 +1700,6 @@ insertRow(0, {0: "2024年3月16日", 1: "凌晨(00:10)", 2: "", 3: "在古神殿
                     return $(el).data('was-checked');
                 }).val() || 'table';
 
-                // ✨ 更新标签样式：移除所有active类，然后给当前选中的label添加
-                $('label[id^="gg_tab_label"]').removeClass('gg-tab-active');
-                $(this).parent('label').addClass('gg-tab-active');
-
                 // 保存当前内容
                 if (prevType === 'table') tempTablePmt = currentVal;
                 else if (prevType === 'chat') tempChatPmt = currentVal;
@@ -1761,8 +1731,8 @@ insertRow(0, {0: "2024年3月16日", 1: "凌晨(00:10)", 2: "", 3: "在古神殿
                 $(this).data('was-checked', true);
             });
 
-            // ✨ 初始化：标记默认选中的标签，并添加active类
-            $('input[name="pmt-sum-type"]:checked').data('was-checked', true).parent('label').addClass('gg-tab-active');
+            // ✨ 初始化：标记默认选中的标签
+            $('input[name="pmt-sum-type"]:checked').data('was-checked', true);
 
             // 文本框失去焦点时同步
             $('#gg_pmt_summary').on('input blur', function() {
