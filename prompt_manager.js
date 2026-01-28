@@ -1561,9 +1561,13 @@ insertRow(0, {0: "2024年3月16日", 1: "凌晨(00:10)", 2: "", 3: "在古神殿
         window.Gaigai.pop('📝 提示词管理', h, true);
 
         setTimeout(() => {
-            // 读取配置，判断当前是否启用【关于我】表格
-            const config = localStorage.getItem('gg_config');
-            const enableUserInfoTable = config ? JSON.parse(config).enableUserInfoTable : false;
+            console.log('🔧 [PromptManager] setTimeout开始执行，准备绑定事件...');
+
+            try {
+                // 读取配置，判断当前是否启用【关于我】表格
+                const config = localStorage.getItem('gg_config');
+                const enableUserInfoTable = config ? JSON.parse(config).enableUserInfoTable : false;
+                console.log('✅ [PromptManager] 配置读取成功, enableUserInfoTable:', enableUserInfoTable);
 
             // 临时变量用于存储编辑中的提示词
             let tempTablePmt = currentData.summaryPromptTable !== undefined ? currentData.summaryPromptTable : DEFAULT_SUM_TABLE;
@@ -1745,7 +1749,9 @@ insertRow(0, {0: "2024年3月16日", 1: "凌晨(00:10)", 2: "", 3: "在古神殿
             });
 
             // 保存按钮
+            console.log('🔧 [PromptManager] 正在绑定保存按钮事件...');
             $('#gg_save_pmt').on('click', async function() {
+                console.log('💾 [PromptManager] 保存按钮被点击！');
                 $('#gg_pmt_summary').trigger('blur');
 
                 // 更新当前预设的数据
@@ -1913,6 +1919,13 @@ insertRow(0, {0: "2024年3月16日", 1: "凌晨(00:10)", 2: "", 3: "在古神殿
                     $(this).val(''); // 重置输入框，允许重复导入同一文件
                 }
             });
+
+            console.log('✅ [PromptManager] 所有事件绑定完成！');
+
+        } catch (error) {
+            console.error('❌ [PromptManager] setTimeout执行出错:', error);
+            console.error('错误堆栈:', error.stack);
+        }
         }, 50);
     }
 
