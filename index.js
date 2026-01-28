@@ -11798,6 +11798,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
     // ✅ 工具函数直接暴露到 window.Gaigai
     window.Gaigai.saveSnapshot = saveSnapshot;
     window.Gaigai.restoreSnapshot = restoreSnapshot;
+    window.Gaigai.omsg = omsg; // 🔧 暴露消息监听函数，支持手动触发和调试
 
     // === 🔌 核心工具集（供子模块使用）===
     // 所有工具函数统一挂载到 window.Gaigai.tools 下，避免全局命名空间污染
