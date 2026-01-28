@@ -9282,41 +9282,47 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                 💾 保存配置
             </button>
 
-            <!-- 3. Maintenance Tools (1 + 2x2 Grid) -->
+            <!-- 3. Maintenance Tools (可折叠) -->
             <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 10px; border: 1px solid rgba(0,0,0,0.05);">
-                <div style="font-size: 11px; font-weight: bold; color: ${UI.tc}; margin-bottom: 8px; opacity: 0.8; text-align: center;">🛠️ 调试与维护工具</div>
+                <div id="gg_debug_header" style="font-size: 11px; font-weight: bold; color: ${UI.tc}; opacity: 0.8; text-align: center; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center; gap: 6px;" title="点击展开/折叠调试工具">
+                    <span>🛠️ 调试与维护工具</span>
+                    <span id="gg_debug_arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
+                </div>
 
-                <!-- 第一行：独立按钮 - 最后发送 -->
-                <button id="gg_open_probe" style="width: 100%; padding: 8px; background: #17a2b8; color: #fff; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: auto; margin-bottom: 10px;">
-                    <span style="font-weight:bold; font-size:12px;">🔍 最后发送</span>
-                    <span style="font-size:10px; opacity:0.8; font-weight:normal;">查看上下文内容</span>
-                </button>
-
-                <!-- 下方：2x2 网格 -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <!-- 按钮 1: 强制同步 -->
-                    <button id="gg_force_cloud_load" style="width: 100%; padding: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: auto;" title="解决多端同步问题">
-                        <span style="font-weight:bold; font-size:12px;">☁️ 强制同步</span>
-                        <span style="font-size:10px; opacity:0.8; font-weight:normal;">多端同步专用</span>
+                <!-- 可折叠内容区域 -->
+                <div id="gg_debug_content" style="display: none; margin-top: 8px;">
+                    <!-- 第一行：独立按钮 - 最后发送 -->
+                    <button id="gg_open_probe" style="width: 100%; padding: 8px; background: #17a2b8; color: #fff; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: auto; margin-bottom: 10px;">
+                        <span style="font-weight:bold; font-size:12px;">🔍 最后发送</span>
+                        <span style="font-size:10px; opacity:0.8; font-weight:normal;">查看上下文内容</span>
                     </button>
 
-                    <!-- 按钮 2: 恢复数据 -->
-                    <button id="gg_rescue_btn" style="width: 100%; padding: 8px; background: transparent; color: #dc3545; border: 1px dashed #dc3545; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: auto;" title="尝试找回丢失的数据">
-                        <span style="font-weight:bold; font-size:12px;">🚑 恢复数据</span>
-                        <span style="font-size:10px; opacity:0.8; font-weight:normal;">数据丢失专用</span>
-                    </button>
+                    <!-- 下方：2x2 网格 -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <!-- 按钮 1: 强制同步 -->
+                        <button id="gg_force_cloud_load" style="width: 100%; padding: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: auto;" title="解决多端同步问题">
+                            <span style="font-weight:bold; font-size:12px;">☁️ 强制同步</span>
+                            <span style="font-size:10px; opacity:0.8; font-weight:normal;">多端同步专用</span>
+                        </button>
 
-                    <!-- 按钮 3: 清除缓存 -->
-                    <button id="gai-btn-clear-cache" style="width: 100%; padding: 8px; background: transparent; color: #ff9800; border: 1px dashed #ff9800; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: auto;" title="清除本地缓存解决卡顿">
-                        <span style="font-weight:bold; font-size:12px;">🧹 清除缓存</span>
-                        <span style="font-size:10px; opacity:0.8; font-weight:normal;">插件更新/卡顿专用</span>
-                    </button>
+                        <!-- 按钮 2: 恢复数据 -->
+                        <button id="gg_rescue_btn" style="width: 100%; padding: 8px; background: transparent; color: #dc3545; border: 1px dashed #dc3545; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: auto;" title="尝试找回丢失的数据">
+                            <span style="font-weight:bold; font-size:12px;">🚑 恢复数据</span>
+                            <span style="font-size:10px; opacity:0.8; font-weight:normal;">数据丢失专用</span>
+                        </button>
 
-                    <!-- 按钮 4: 查看日志 -->
-                    <button id="gg_show_logs" style="width: 100%; padding: 8px; background: transparent; color: #9c27b0; border: 1px dashed #9c27b0; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: auto;" title="查看浏览器控制台日志">
-                        <span style="font-weight:bold; font-size:12px;">📜 查看日志</span>
-                        <span style="font-size:10px; opacity:0.8; font-weight:normal;">移动端调试专用</span>
-                    </button>
+                        <!-- 按钮 3: 清除缓存 -->
+                        <button id="gai-btn-clear-cache" style="width: 100%; padding: 8px; background: transparent; color: #ff9800; border: 1px dashed #ff9800; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: auto;" title="清除本地缓存解决卡顿">
+                            <span style="font-weight:bold; font-size:12px;">🧹 清除缓存</span>
+                            <span style="font-size:10px; opacity:0.8; font-weight:normal;">插件更新/卡顿专用</span>
+                        </button>
+
+                        <!-- 按钮 4: 查看日志 -->
+                        <button id="gg_show_logs" style="width: 100%; padding: 8px; background: transparent; color: #9c27b0; border: 1px dashed #9c27b0; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: auto;" title="查看浏览器控制台日志">
+                            <span style="font-weight:bold; font-size:12px;">📜 查看日志</span>
+                            <span style="font-size:10px; opacity:0.8; font-weight:normal;">移动端调试专用</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -9326,6 +9332,20 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
         window.isEditingConfig = true; // 标记开始编辑配置，防止后台同步覆盖用户输入
 
         setTimeout(() => {
+            // 调试工具折叠/展开功能
+            $('#gg_debug_header').on('click', function() {
+                const $content = $('#gg_debug_content');
+                const $arrow = $('#gg_debug_arrow');
+
+                if ($content.is(':visible')) {
+                    $content.slideUp(200);
+                    $arrow.css('transform', 'rotate(0deg)');
+                } else {
+                    $content.slideDown(200);
+                    $arrow.css('transform', 'rotate(180deg)');
+                }
+            });
+
             // ✅✅✅ [修复] 强制同步 UI 状态与内存配置
             // 优先读取 API_CONFIG.summarySource，如果未定义则默认为 'table' (与定义保持一致)
             const currentSummarySource = API_CONFIG.summarySource || 'table';
