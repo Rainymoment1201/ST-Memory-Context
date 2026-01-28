@@ -1174,10 +1174,32 @@ insertRow(0, {0: "2024年3月16日", 1: "凌晨(00:10)", 2: "", 3: "在古神殿
     function showPromptManager() {
         const profilesData = getProfilesData() || initProfiles();
 
-        // ✅ 始终使用默认预设，不再支持切换
-        const currentProfileId = 'default';
+        // 获取当前角色名用于绑定功能
+        const charName = getCurrentCharacterName();
+
+        // ✅ 始终使用 profilesData.currentProfileId，允许用户自由切换编辑
+        let currentProfileId = profilesData.currentProfileId || 'default';
+
+        // ✅ 如果当前角色有绑定预设，自动选中绑定的预设（仅影响本次渲染，不保存）
+        if (charName && profilesData.charBindings && profilesData.charBindings[charName]) {
+            currentProfileId = profilesData.charBindings[charName];
+            console.log(`[PromptManager] 角色 "${charName}" 已绑定预设 "${currentProfileId}"，自动选中`);
+        }
+
         const currentProfile = profilesData.profiles[currentProfileId];
         const currentData = currentProfile.data;
+
+        // 检查当前预设是否绑定到当前角色
+        const isCharBound = charName && profilesData.charBindings[charName] === currentProfileId;
+
+        // 构建预设下拉列表
+        let profileOptions = '';
+        for (const [id, profile] of Object.entries(profilesData.profiles)) {
+            const selected = id === currentProfileId ? 'selected' : '';
+            profileOptions += `<option value="${id}" ${selected}>${window.Gaigai.esc(profile.name)}</option>`;
+        }
+
+        const isSel = (val, target) => val === target ? 'selected' : '';
 
         const h = `<div class="g-p" style="display: flex; flex-direction: column; gap: 15px;">
             <h4 style="margin:0 0 5px 0; opacity:0.8;">📝 提示词管理</h4>
