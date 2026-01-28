@@ -44,8 +44,6 @@
     const C = {
         masterSwitch: true,     // 🔴 全局主开关（长按图标切换）
         enabled: true,          // ✅ 默认开启实时填表
-        filterTags: '',         // 黑名单标签（去除）
-        filterTagsWhite: '',    // 白名单标签（仅留）
         contextLimit: true,     // ✅ 默认开启隐藏楼层
         contextLimitCount: 30,  // ✅ 隐藏30楼
         protectGreeting: false, // ❌ 默认不保护第0楼（开场白）
@@ -1335,8 +1333,6 @@
                     contextLimit: C.contextLimit,
                     contextLimitCount: C.contextLimitCount,
                     protectGreeting: C.protectGreeting,
-                    filterTags: C.filterTags,
-                    filterTagsWhite: C.filterTagsWhite,
                     persistUserInfo: C.persistUserInfo,
                     // ✅ 向量检索配置
                     vectorEnabled: C.vectorEnabled,
@@ -1585,8 +1581,6 @@
                 C.autoSummarySilent = globalConfig.autoSummarySilent !== undefined ? globalConfig.autoSummarySilent : true;
                 C.contextLimit = globalConfig.contextLimit !== undefined ? globalConfig.contextLimit : true;
                 C.contextLimitCount = globalConfig.contextLimitCount !== undefined ? globalConfig.contextLimitCount : 30;
-                C.filterTags = globalConfig.filterTags !== undefined ? globalConfig.filterTags : '';
-                C.filterTagsWhite = globalConfig.filterTagsWhite !== undefined ? globalConfig.filterTagsWhite : '';
                 C.persistUserInfo = globalConfig.persistUserInfo !== undefined ? globalConfig.persistUserInfo : false;
                 // ✅ 向量检索配置
                 C.vectorEnabled = globalConfig.vectorEnabled !== undefined ? globalConfig.vectorEnabled : false;
@@ -2618,71 +2612,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
      * @param {string} content - 原始文本
      * @returns {string} - 处理后的文本
      */
-    function filterContentByTags(content) {
-        if (!content) return content;
-        let result = content;
-
-        // 1️⃣ 黑名单处理 (如果设置了)
-        if (C.filterTags) {
-            const tags = C.filterTags.split(/[,，]/).map(t => t.trim()).filter(t => t);
-            tags.forEach(t => {
-                let re;
-                if (t.startsWith('!--')) {
-                    // 匹配 HTML 注释 <!--...-->
-                    re = new RegExp('<' + t + '[\\s\\S]*?-->', 'gi');
-                } else {
-                    // 匹配成对标签 <tag>...</tag>
-                    // 允许闭合标签中有空格 (e.g., </ details>)
-                    re = new RegExp('<' + t + '(?:\\s+[^>]*)?>[\\s\\S]*?<\\/' + t + '\\s*>', 'gi');
-                }
-
-                // 使用循环重复替换,直到没有更多匹配(处理嵌套标签)
-                let prevResult;
-                let loopCount = 0;
-                const maxLoops = 50; // 安全计数器,防止无限循环
-
-                do {
-                    prevResult = result;
-                    result = result.replace(re, '');
-                    loopCount++;
-                } while (result !== prevResult && loopCount < maxLoops);
-            });
-        }
-
-        // 2️⃣ 白名单处理 (如果设置了，基于黑名单处理后的结果继续处理)
-        if (C.filterTagsWhite) {
-            const tags = C.filterTagsWhite.split(/[,，]/).map(t => t.trim()).filter(t => t);
-            if (tags.length > 0) {
-                let extracted = [];
-                let foundAny = false;
-                tags.forEach(t => {
-                    let re;
-                    if (t.startsWith('!--')) {
-                        // 白名单模式下注释标签通常不常用，但也做兼容
-                        re = new RegExp('<' + t + '[\\s\\S]*?-->', 'gi');
-                    } else {
-                        // 提取标签内的内容（group 1）
-                        re = new RegExp(`<${t}(?:\\s+[^>]*)?>([\\s\\S]*?)(?:<\\/${t}>|$)`, 'gi');
-                    }
-                    let match;
-                    while ((match = re.exec(result)) !== null) { // 注意：是对 result 进行匹配
-                        if (match[1] && match[1].trim()) {
-                            extracted.push(match[1].trim());
-                            foundAny = true;
-                        } else if (match[0]) {
-                            // 兼容注释或其他无 group 捕获的情况
-                            extracted.push(match[0].trim());
-                            foundAny = true;
-                        }
-                    }
-                });
-                // 只有找到了白名单标签才替换，否则保留(黑名单处理后的)原文本，防止误删
-                if (foundAny) result = extracted.join('\n\n');
-            }
-        }
-
-        return result.trim();
-    }
+    
 
     // ✅✅✅ 智能解析器 v5.0 (终极融合版：脚本 + ToolCall + Gemini数组)
     function prs(tx) {
@@ -9417,41 +9347,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
             </div>
         </div>
 
-        <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.2);">
-            <div style="font-weight: 600; color:var(--g-tc); margin-bottom: 8px;">🏷️ 标签过滤（串行双重过滤）</div>
-            <div style="font-size:10px; color:var(--g-tc); opacity:0.7; margin-bottom:6px;">过滤逻辑：先去黑后留白，可单选。例: <code style="background:rgba(0,0,0,0.1); padding:2px; color:var(--g-tc);">think, search</code>。若要过滤 <code style="background:rgba(0,0,0,0.1); padding:2px; color:var(--g-tc);">&lt;!--注释--&gt;</code>，请填入 <code style="background:rgba(0,0,0,0.1); padding:2px; color:var(--g-tc);">!--</code></div>
-
-            <div style="margin-bottom: 8px;">
-                <label style="font-size:11px; color:var(--g-tc); font-weight: 500; display: block; margin-bottom: 4px;">🚫 黑名单标签 (去除)</label>
-                <input type="text" id="gg_c_filter_tags" value="${esc(C.filterTags || '')}" placeholder="例: thinking, system" style="width:100%; padding:5px; border:1px solid rgba(0,0,0,0.1); border-radius:4px; font-size:11px; font-family:monospace; color:var(--g-tc);" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-
-                <!-- 快速添加区域 -->
-                <div style="margin-top: 6px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
-                    <span style="font-size:10px; font-weight:bold; color:var(--g-tc); opacity:0.8;">🔥 常用：</span>
-                    <span class="gg-quick-tag" data-tag="think" style="background: rgba(0,0,0,0.08); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; font-family: monospace; color:var(--g-tc); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.15)'" onmouseout="this.style.background='rgba(0,0,0,0.08)'">think</span>
-                    <span class="gg-quick-tag" data-tag="thinking" style="background: rgba(0,0,0,0.08); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; font-family: monospace; color:var(--g-tc); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.15)'" onmouseout="this.style.background='rgba(0,0,0,0.08)'">thinking</span>
-                    <span class="gg-quick-tag" data-tag="details" style="background: rgba(0,0,0,0.08); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; font-family: monospace; color:var(--g-tc); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.15)'" onmouseout="this.style.background='rgba(0,0,0,0.08)'">details</span>
-                    <span class="gg-quick-tag" data-tag="summary" style="background: rgba(0,0,0,0.08); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; font-family: monospace; color:var(--g-tc); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.15)'" onmouseout="this.style.background='rgba(0,0,0,0.08)'">summary</span>
-                    <span class="gg-quick-tag" data-tag="!--" style="background: rgba(0,0,0,0.08); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; font-family: monospace; color:var(--g-tc); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.15)'" onmouseout="this.style.background='rgba(0,0,0,0.08)'">!--</span>
-                    <span id="gg_clear_filter_tags" style="background: rgba(211,47,47,0.1); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; color:#d32f2f; transition: background 0.2s;" onmouseover="this.style.background='rgba(211,47,47,0.2)'" onmouseout="this.style.background='rgba(211,47,47,0.1)'" title="清空">🗑️</span>
-                </div>
-
-                <div style="font-size:9px; color:#d63031; margin-top:2px;">删除这些标签及其内部的所有文字</div>
-            </div>
-
-            <div>
-                <label style="font-size:11px; color:var(--g-tc); font-weight: 500; display: block; margin-bottom: 4px;">✅ 白名单标签 (仅留)</label>
-                <input type="text" id="gg_c_filter_tags_white" value="${esc(C.filterTagsWhite || '')}" placeholder="例: content, message" style="width:100%; padding:5px; border:1px solid rgba(0,0,0,0.1); border-radius:4px; font-size:11px; font-family:monospace; color:var(--g-tc);" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                <div style="margin-top: 6px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
-                    <span style="font-size:10px; font-weight:bold; color:var(--g-tc); opacity:0.8;">🔥 常用：</span>
-                    <span class="gg-quick-tag-white" data-tag="content" style="background: rgba(0,0,0,0.08); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; font-family: monospace; color:var(--g-tc); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.15)'" onmouseout="this.style.background='rgba(0,0,0,0.08)'">content</span>
-                    <span class="gg-quick-tag-white" data-tag="statusbar" style="background: rgba(0,0,0,0.08); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; font-family: monospace; color:var(--g-tc); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.15)'" onmouseout="this.style.background='rgba(0,0,0,0.08)'">statusbar</span>
-                    <span id="gg_clear_filter_tags_white" style="background: rgba(211,47,47,0.1); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; color:#d32f2f; transition: background 0.2s;" onmouseover="this.style.background='rgba(211,47,47,0.2)'" onmouseout="this.style.background='rgba(211,47,47,0.1)'" title="清空">🗑️</span>
-                </div>
-                <div style="font-size:9px; color:#27ae60; margin-top:2px;">仅提取这些标签内的文字（若未找到则保留黑名单处理后的结果）</div>
-            </div>
-        </div>
-
         <div style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; padding: 10px; margin-top: 10px;">
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight: 500; margin-top: 8px;">
                 <input type="checkbox" id="gg_c_vector_enabled" ${C.vectorEnabled ? 'checked' : ''}>
@@ -9878,8 +9773,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                 C.autoSummarySilent = $('#gg_c_auto_sum_silent').is(':checked');
                 C.autoSummaryDelay = $('#gg_c_auto_sum_delay').is(':checked');
                 C.autoSummaryDelayCount = parseInt($('#gg_c_auto_sum_delay_count').val()) || 5;
-                C.filterTags = $('#gg_c_filter_tags').val();
-                C.filterTagsWhite = $('#gg_c_filter_tags_white').val();
                 C.vectorEnabled = $('#gg_c_vector_enabled').is(':checked');
                 C.autoVectorizeSummary = $('#gg_c_auto_vectorize').is(':checked');
                 C.persistUserInfo = $('#gg_c_persist_user_info').is(':checked');
@@ -10041,71 +9934,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                 } else {
                     customAlert('向量管理器未加载，请刷新页面后重试', '错误');
                 }
-            });
-
-            // ==================== 快速添加标签功能 ====================
-            // 点击标签快速添加到输入框
-            $('.gg-quick-tag').off('click').on('click', function() {
-                const tag = $(this).data('tag');
-                const $input = $('#gg_c_filter_tags');
-                let currentValue = $input.val().trim();
-
-                // 如果已有内容,追加逗号和空格
-                if (currentValue) {
-                    currentValue += ', ';
-                }
-
-                // 追加标签
-                currentValue += tag;
-                $input.val(currentValue);
-
-                // 视觉反馈
-                $(this).css('background', 'rgba(76,175,80,0.3)');
-                setTimeout(() => {
-                    $(this).css('background', 'rgba(0,0,0,0.08)');
-                }, 200);
-            });
-
-            // 清空按钮
-            $('#gg_clear_filter_tags').off('click').on('click', function() {
-                $('#gg_c_filter_tags').val('');
-
-                // 视觉反馈
-                $(this).css('background', 'rgba(211,47,47,0.4)');
-                setTimeout(() => {
-                    $(this).css('background', 'rgba(211,47,47,0.1)');
-                }, 200);
-            });
-
-            // ==================== 白名单快速添加标签功能 ====================
-            // Whitelist Quick Tags
-            $('.gg-quick-tag-white').off('click').on('click', function() {
-                const tag = $(this).data('tag');
-                const $input = $('#gg_c_filter_tags_white');
-                let currentValue = $input.val().trim();
-
-                if (currentValue) {
-                    currentValue += ', ';
-                }
-                currentValue += tag;
-                $input.val(currentValue);
-
-                // Visual feedback
-                $(this).css('background', 'rgba(76,175,80,0.3)');
-                setTimeout(() => {
-                    $(this).css('background', 'rgba(0,0,0,0.08)');
-                }, 200);
-            });
-
-            // Whitelist Clear Button
-            $('#gg_clear_filter_tags_white').off('click').on('click', function() {
-                $('#gg_c_filter_tags_white').val('');
-
-                // Visual feedback
-                $(this).css('background', 'rgba(211,47,47,0.4)');
-                setTimeout(() => {
-                    $(this).css('background', 'rgba(211,47,47,0.1)');
-                }, 200);
             });
 
             // 🔓 释放恢复标志，允许保存操作
@@ -10874,9 +10702,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
 
                         // ✅ 新增：执行清洗，去除 Memory 标签和用户黑名单标签(如 think)
                         candidateText = window.Gaigai.cleanMemoryTags(candidateText);
-                        if (window.Gaigai.tools && typeof window.Gaigai.tools.filterContentByTags === 'function') {
-                            candidateText = window.Gaigai.tools.filterContentByTags(candidateText);
-                        }
 
                         // 只有清洗后内容有效才采纳
                         if (candidateText && candidateText.trim()) {
@@ -12059,8 +11884,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
         callIndependentAPI,
         callTavernAPI,
         prs,
-        exe,
-        filterContentByTags
+        exe
     };
 
     console.log('✅ window.Gaigai 已挂载', window.Gaigai);
