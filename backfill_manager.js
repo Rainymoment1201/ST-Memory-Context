@@ -959,6 +959,13 @@ ${lastError.message}
                     const sheetName = sheet.n;
                     let sheetContent = sheet.txt(i);
 
+                    // 🟢 检查是否有绿色（已总结）行被隐藏
+                    const summarizedRows = JSON.parse(localStorage.getItem('gg_summarized') || '{}');
+                    const hiddenRows = summarizedRows[i] || [];
+                    const hiddenRowsInfo = hiddenRows.length > 0
+                        ? `\n\n⚠️ 【重要提示】表${i}的行索引 [${hiddenRows.join(', ')}] 已被占用（已总结的历史数据，未显示但确实存在）。\n✅ 你生成 insertRow(${i}, {...}) 时，新行会自动追加到末尾，无需担心索引冲突。\n❌ 严禁使用 updateRow(${i}, ${hiddenRows.join('/')}/${hiddenRows[hiddenRows.length-1]}, {...}) 修改这些行，它们已被锁定。`
+                        : '';
+
                     // 空表处理
                     if (!sheetContent || sheetContent.trim() === '') {
                         sheetContent = `(当前暂无数据)\n列结构: ${sheet.c.join(' | ')}`;
@@ -968,7 +975,7 @@ ${lastError.message}
                     messages.push({
                         role: 'system',
                         name: `SYSTEM (${sheetName})`,
-                        content: `【系统只读数据库：已归档历史 - ${sheetName}】\n${sheetContent}`,
+                        content: `【系统只读数据库：已归档历史 - ${sheetName}】\n${sheetContent}${hiddenRowsInfo}`,
                         isGaigaiData: true
                     });
                 });
@@ -979,6 +986,13 @@ ${lastError.message}
                     const sheetName = sheet.n;
                     let sheetContent = sheet.txt(targetIndex);
 
+                    // 🟢 检查是否有绿色（已总结）行被隐藏
+                    const summarizedRows = JSON.parse(localStorage.getItem('gg_summarized') || '{}');
+                    const hiddenRows = summarizedRows[targetIndex] || [];
+                    const hiddenRowsInfo = hiddenRows.length > 0
+                        ? `\n\n⚠️ 【重要提示】表${targetIndex}的行索引 [${hiddenRows.join(', ')}] 已被占用（已总结的历史数据，未显示但确实存在）。\n✅ 你生成 insertRow(${targetIndex}, {...}) 时，新行会自动追加到末尾，无需担心索引冲突。\n❌ 严禁使用 updateRow(${targetIndex}, ${hiddenRows.join('/')}/${hiddenRows[hiddenRows.length-1]}, {...}) 修改这些行，它们已被锁定。`
+                        : '';
+
                     // 空表处理
                     if (!sheetContent || sheetContent.trim() === '') {
                         sheetContent = `(当前暂无数据)\n列结构: ${sheet.c.join(' | ')}`;
@@ -988,7 +1002,7 @@ ${lastError.message}
                     messages.push({
                         role: 'system',
                         name: `SYSTEM (${sheetName})`,
-                        content: `【系统只读数据库：已归档历史 - ${sheetName}】\n${sheetContent}`,
+                        content: `【系统只读数据库：已归档历史 - ${sheetName}】\n${sheetContent}${hiddenRowsInfo}`,
                         isGaigaiData: true
                     });
                     console.log(`🎯 [单表模式] 只处理表${targetIndex} - ${sheetName}`);
