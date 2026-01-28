@@ -8294,8 +8294,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
 
         <fieldset style="border:1px solid #ddd; padding:10px; border-radius:4px; margin-bottom:12px;">
             <legend style="font-size:11px; font-weight:600;">🚀 API 模式</legend>
-            <label><input type="radio" name="gg_api_mode" value="tavern" ${!API_CONFIG.useIndependentAPI ? 'checked' : ''}> 使用酒馆API（默认）</label>
-            <br>
             <label><input type="radio" name="gg_api_mode" value="independent" ${API_CONFIG.useIndependentAPI ? 'checked' : ''}> 使用独立API</label>
         </fieldset>
 
@@ -9236,10 +9234,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
         ${hibernateBanner}
         <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.2);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div>
-                    <label style="font-weight: 600; display:block;">⚡ 批量填表</label>
-                    <span style="font-size:10px; opacity:0.7;">每隔N层填表 (建议配置独立API)</span>
-                </div>
+                <label style="font-weight: 600;">⚡ 批量填表</label>
                 <input type="checkbox" id="gg_c_auto_bf" ${C.autoBackfill ? 'checked' : ''} style="transform: scale(1.2);">
             </div>
             
