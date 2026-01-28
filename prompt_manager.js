@@ -1216,36 +1216,6 @@ insertRow(0, {0: "2024年3月16日", 1: "凌晨(00:10)", 2: "", 3: "在古神殿
                 </button>
             </div>
 
-            <div style="background: rgba(255,255,255,0.2); border-radius: 8px; padding: 12px; border: 1px solid rgba(255,255,255,0.3);">
-                <div style="display: flex; flex-wrap: wrap !important; gap: 8px; align-items: center; margin-bottom: 10px; max-width: 100%;">
-                    <label style="font-weight: 600; flex-shrink: 0;">📦 当前预设：</label>
-                    <select id="gg_profile_selector" style="flex: 1 1 auto; min-width: 150px; padding: 8px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.2); background: rgba(255,255,255,0.9); font-size: 12px;">
-                        ${profileOptions}
-                    </select>
-                    <button id="gg_new_profile_btn" style="padding: 8px 12px; background: #28a745; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap; flex: 1 0 auto;">➕ 新建</button>
-                    <button id="gg_rename_profile_btn" style="padding: 8px 12px; background: #17a2b8; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap; flex: 1 0 auto;">✏️ 重命名</button>
-                    <button id="gg_delete_profile_btn" style="padding: 8px 12px; background: #dc3545; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap; flex: 1 0 auto;" ${currentProfileId === 'default' ? 'disabled' : ''}>🗑️ 删除</button>
-                </div>
-
-                ${charName ? `
-                <div style="margin-bottom: 8px;">
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; margin-bottom: 4px;">
-                        <input type="checkbox" id="gg_bind_to_char" ${isCharBound ? 'checked' : ''} style="transform: scale(1.2);">
-                        <span>🔒 锁定为此角色专用 (切换角色时自动加载): <strong>"${window.Gaigai.esc(charName)}"</strong></span>
-                    </label>
-                    <div style="font-size: 10px; color: #666; opacity: 0.7; padding-left: 28px;">
-                        未勾选时，将使用全局通用的"当前预设"。
-                    </div>
-                </div>
-                ` : '<div style="font-size: 11px; opacity: 0.6;">💡 提示：进入对话后可绑定预设到特定角色</div>'}
-            </div>
-
-            <div style="display: flex; flex-wrap: wrap !important; gap: 8px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed rgba(0,0,0,0.1); max-width: 100%;">
-                <button id="gg_import_btn" style="flex: 1 1 auto; min-width: 90px; padding: 6px; background: ${window.Gaigai.ui.c}; opacity: 0.8; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 11px;">📥 导入</button>
-                <button id="gg_export_single_btn" style="flex: 1 1 auto; min-width: 90px; padding: 6px; background: ${window.Gaigai.ui.c}; opacity: 0.8; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 11px;">📤 导出当前</button>
-                <button id="gg_export_all_btn" style="flex: 1 1 auto; min-width: 90px; padding: 6px; background: ${window.Gaigai.ui.c}; opacity: 0.8; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 11px;">📦 导出全部</button>
-            </div>
-            <input type="file" id="gg_import_file_input" accept=".json" style="display: none;" />
             <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 12px; border: 1px solid rgba(255,255,255,0.2);">
                 <div style="margin-bottom: 8px; font-weight: 600;">🔓 史官破限 (System Pre-Prompt)</div>
                 <div style="font-size:10px; opacity:0.6; margin-bottom:10px;">用于总结/追溯等独立任务，不会在实时填表时发送</div>

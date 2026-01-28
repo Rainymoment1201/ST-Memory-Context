@@ -9217,22 +9217,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                     <input type="number" id="gg_c_auto_bf_delay_count" value="${C.autoBackfillDelayCount || 5}" min="1" style="width:70px; text-align:center; padding:2px; border-radius:4px; border:1px solid rgba(0,0,0,0.2);" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                     <span style="opacity:0.8;">层再执行</span>
                 </div>
-                <div style="background: rgba(33, 150, 243, 0.08); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 4px; padding: 8px; margin-bottom: 6px;">
-                    <div style="font-weight: 600; margin-bottom: 4px; color: #1976d2; font-size: 10px;">🔔 发起模式</div>
-                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; margin-bottom: 2px;">
-                        <input type="checkbox" id="gg_c_auto_bf_prompt" ${C.autoBackfillPrompt ? 'checked' : ''}>
-                        <span>🤫 触发前静默发起 (直接执行)</span>
-                    </label>
-                    <div style="font-size: 9px; color: #666; margin-left: 20px;">未勾选时弹窗确认</div>
-                </div>
-                <div style="background: rgba(76, 175, 80, 0.08); border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 4px; padding: 8px;">
-                    <div style="font-weight: 600; margin-bottom: 4px; color: #388e3c; font-size: 10px;">✅ 完成模式</div>
-                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; margin-bottom: 2px;">
-                        <input type="checkbox" id="gg_c_auto_bf_silent" ${C.autoBackfillSilent ? 'checked' : ''}>
-                        <span>🤫 完成后静默保存 (不弹结果窗)</span>
-                    </label>
-                    <div style="font-size: 9px; color: ${UI.tc}; opacity:0.7; margin-left: 20px;">未勾选时弹窗显示填表结果</div>
-                </div>
             </div>
         </div>
 
@@ -9331,24 +9315,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                     <span style="opacity:0.8;">滞后</span>
                     <input type="number" id="gg_c_auto_sum_delay_count" value="${C.autoSummaryDelayCount || 5}" min="1" style="width:70px; text-align:center; padding:2px; border-radius:4px; border:1px solid rgba(0,0,0,0.2);" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                     <span style="opacity:0.8;">层再执行</span>
-                </div>
-
-                <div style="background: rgba(33, 150, 243, 0.08); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 4px; padding: 8px; margin-bottom: 6px;">
-                    <div style="font-weight: 600; margin-bottom: 4px; color: #1976d2; font-size: 10px;">🔔 发起模式</div>
-                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; margin-bottom: 2px;">
-                        <input type="checkbox" id="gg_c_auto_sum_prompt" ${C.autoSummaryPrompt ? 'checked' : ''}>
-                        <span>🤫 触发前静默发起 (直接执行)</span>
-                    </label>
-                    <div style="font-size: 9px; color: #666; margin-left: 20px;">未勾选时弹窗确认</div>
-                </div>
-
-                <div style="background: rgba(76, 175, 80, 0.08); border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 4px; padding: 8px;">
-                    <div style="font-weight: 600; margin-bottom: 4px; color: #388e3c; font-size: 10px;">✅ 完成模式</div>
-                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; margin-bottom: 2px;">
-                        <input type="checkbox" id="gg_c_auto_sum_silent" ${C.autoSummarySilent ? 'checked' : ''}>
-                        <span>🤫 完成后静默保存 (不弹结果窗)</span>
-                    </label>
-                    <div style="font-size: 9px; color: #666; margin-left: 20px;">未勾选时弹窗显示总结结果</div>
                 </div>
             </div>
         </div>
@@ -9758,8 +9724,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                 C.autoBackfill = $('#gg_c_auto_bf').is(':checked');
 
                 C.autoBackfillFloor = parseInt($('#gg_c_auto_bf_floor').val()) || 10;
-                C.autoBackfillPrompt = $('#gg_c_auto_bf_prompt').is(':checked');
-                C.autoBackfillSilent = $('#gg_c_auto_bf_silent').is(':checked');
                 C.autoBackfillDelay = $('#gg_c_auto_bf_delay').is(':checked');
                 C.autoBackfillDelayCount = parseInt($('#gg_c_auto_bf_delay_count').val()) || 5;
                 C.contextLimit = $('#gg_c_limit_on').is(':checked');
@@ -9768,8 +9732,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                 C.tableInj = $('#gg_c_table_inj').is(':checked');
                 C.autoSummary = $('#gg_c_auto_sum').is(':checked');
                 C.autoSummaryFloor = parseInt($('#gg_c_auto_floor').val());
-                C.autoSummaryPrompt = $('#gg_c_auto_sum_prompt').is(':checked');
-                C.autoSummarySilent = $('#gg_c_auto_sum_silent').is(':checked');
                 C.autoSummaryDelay = $('#gg_c_auto_sum_delay').is(':checked');
                 C.autoSummaryDelayCount = parseInt($('#gg_c_auto_sum_delay_count').val()) || 5;
                 C.vectorEnabled = $('#gg_c_vector_enabled').is(':checked');
