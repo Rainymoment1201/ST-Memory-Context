@@ -42,9 +42,7 @@
 
     // ==================== 用户配置对象 ====================
     const C = {
-        masterSwitch: true,     // 🔴 全局主开关（长按图标切换）
-        enabled: true,          // ✅ 默认开启实时填表
-        contextLimit: true,     // ✅ 默认开启隐藏楼层
+        masterSwitch: true,     // 🔴 全局主开关（长按图标切换）        contextLimit: true,     // ✅ 默认开启隐藏楼层
         contextLimitCount: 30,  // ✅ 隐藏30楼
         protectGreeting: false, // ❌ 默认不保护第0楼（开场白）
         tableInj: true,
@@ -59,7 +57,7 @@
         manualSummaryTargetTables: [], // 🆕 手动总结控制台的目标表格索引（空数组表示全部）
         autoSummaryDelay: true,        // ✅ 开启延迟
         autoSummaryDelayCount: 4,      // ✅ 延迟4楼
-        autoBackfill: false,           // ❌ 默认关闭批量填表（避免与实时填表冲突）
+        autoBackfill: false,           // ❌ 默认关闭批量填表
         autoBackfillFloor: 20,         // ✅ 预设20层
         autoBackfillPrompt: true,      // ✅ 默认静默发起（不弹窗确认）
         autoBackfillSilent: true,      // ✅ 默认静默保存（不弹窗显示结果）
@@ -1310,7 +1308,6 @@
                 },
                 // ✅ Per-Chat Configuration: Save critical feature toggles for this chat
                 config: {
-                    enabled: C.enabled,
                     autoBackfill: C.autoBackfill,
                     autoSummary: C.autoSummary,
                     // ✅ 核心参数
@@ -1564,7 +1561,6 @@
                 const globalApiConfig = globalApiStr ? JSON.parse(globalApiStr) : {};
 
                 // --- 1. 开关类 ---
-                C.enabled = globalConfig.enabled !== undefined ? globalConfig.enabled : true;
                 C.autoBackfill = globalConfig.autoBackfill !== undefined ? globalConfig.autoBackfill : false;
                 C.autoSummary = globalConfig.autoSummary !== undefined ? globalConfig.autoSummary : true;
                 // --- 2. 数值类 ---
@@ -2941,10 +2937,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
         }
 
         // C. 准备提示词 (仅当开关开启时，才准备提示词，因为关了就不应该填表)
-        // 逻辑：如果开启了批量填表(autoBackfill)，强制屏蔽实时填表提示词，无论 C.enabled 是什么状态！
-        if (C.enabled && !C.autoBackfill && window.Gaigai.PromptManager.get('tablePrompt')) {
-            strPrompt = window.Gaigai.PromptManager.resolveVariables(window.Gaigai.PromptManager.get('tablePrompt'), m.ctx());
-        }
+        
 
         // ============================================================
         // 2. 组合智能逻辑 (用于默认插入和 {{MEMORY}})
@@ -3355,11 +3348,9 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
         if (!document.getElementById('gaigai-hide-style')) {
             $('<style id="gaigai-hide-style">memory, gaigaimemory, tableedit { display: none !important; }</style>').appendTo('head');
         }
-
-        // 2. 性能策略：如果是"批量填表"模式且没开启"实时填表"，
         // 说明聊天记录里基本没有标签，不需要频繁扫描，直接返回（除非强制刷新）
         // 注意：这里要确保不是在初始化阶段
-        if (C.autoBackfill && !C.enabled && !window.Gaigai.isInitializing) {
+        if (C.autoBackfill && !window.Gaigai.isInitializing) {
             // 偶尔执行一次即可，不用每次消息都扫
             if (Math.random() > 0.1) return;
         }
@@ -9179,16 +9170,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
         <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.2);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div>
-                    <label style="font-weight: 600; display:block;">💡 实时填表</label>
-                    <span style="font-size:10px; opacity:0.7;">每回合正文内回复 (与酒馆同一API)</span>
-                </div>
-                <input type="checkbox" id="gg_c_enabled" ${C.enabled ? 'checked' : ''} style="transform: scale(1.2);">
-            </div>
-            
-            <hr style="border: 0; border-top: 1px dashed rgba(0,0,0,0.1); margin: 5px 0 8px 0;">
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div>
                     <label style="font-weight: 600; display:block;">⚡ 批量填表</label>
                     <span style="font-size:10px; opacity:0.7;">每隔N层填表 (建议配置独立API)</span>
                 </div>
@@ -9583,11 +9564,9 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                     html: `
                         <div style="margin-bottom: 12px; font-weight: 600; color: ${accentColor};">🌟 变量模式：</div>
                         <div style="margin-bottom: 12px;">如需调整表格里面的内容在上下文的位置，用户需手动将对应的变量，新增条目插入到预设中：</div>
-                        <div style="margin-bottom: 8px;">• 全部内容(表格+总结)：<code style="background:${codeBg}; color:${accentColor}; padding:2px 6px; border-radius:3px; font-weight:bold;">{{MEMORY}}</code> (跟随实时填表开关)</div>
                         <div style="margin-bottom: 8px;">• 表格插入变量(不含总结表)：<code style="background:${codeBg}; color:${accentColor}; padding:2px 6px; border-radius:3px; font-weight:bold;">{{MEMORY_TABLE}}</code> (强制发送表格内容)</div>
                         <div style="margin-bottom: 8px;">• 总结插入变量(不含其他表格)：<code style="background:${codeBg}; color:${accentColor}; padding:2px 6px; border-radius:3px; font-weight:bold;">{{MEMORY_SUMMARY}}</code> (强制发送总结内容)</div>
-                        <div>• 实时填表提示词插入变量：<code style="background:${codeBg}; color:${accentColor}; padding:2px 6px; border-radius:3px; font-weight:bold;">{{MEMORY_PROMPT}}</code></div>
-                    `
+                        `
                 });
 
                 const $closeBtn = $('<button>', {
@@ -9687,8 +9666,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                         localStorage.setItem('gg_config', JSON.stringify(C));
                         localStorage.setItem('gg_api', JSON.stringify(API_CONFIG));
                         localStorage.setItem('gg_ui', JSON.stringify(UI));
-
-                        $('#gg_c_enabled').prop('checked', C.enabled);
                         $('#gg_c_auto_bf').prop('checked', C.autoBackfill);
                         $('#gg_c_auto_sum').prop('checked', C.autoSummary);
                     }
@@ -9753,10 +9730,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                 }
 
                 // ✅ 简单读取 UI 状态，不做任何强制逻辑
-                C.enabled = $('#gg_c_enabled').is(':checked');
                 C.autoBackfill = $('#gg_c_auto_bf').is(':checked');
-
-                console.log(`💾 [配置同步] 实时填表:${C.enabled} | 批量填表:${C.autoBackfill}`);
 
                 C.autoBackfillFloor = parseInt($('#gg_c_auto_bf_floor').val()) || 10;
                 C.autoBackfillPrompt = $('#gg_c_auto_bf_prompt').is(':checked');
@@ -9812,33 +9786,7 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                 }
             });
 
-            $('#gg_c_enabled').on('change', async function () {
-                // 🛡️ 防止配置恢复期间触发保存（修复移动端竞态条件）
-                if (isRestoringSettings) {
-                    console.log('⏸️ [gg_c_enabled] 配置恢复中，跳过保存');
-                    return;
-                }
-
-                const isChecked = $(this).is(':checked');
-
-                // ✅ [UI互斥] 开启实时填表时，自动关闭批量填表
-                if (isChecked) {
-                    $('#gg_c_auto_bf').prop('checked', false);
-                    $('#gg_auto_bf_settings').slideUp();
-                }
-
-                // ✅ [防丢失] 同步所有UI配置（会根据新的checkbox状态更新C.enabled和C.autoBackfill）
-                syncUIToConfig();
-
-                // ✅ Per-Chat Configuration: Save to current chat immediately
-                m.save(false, true); // 配置更改立即保存
-                console.log('💾 [每聊配置] 已保存实时填表设置到当前聊天:', isChecked);
-
-                // ✅ 同步到云端
-                if (typeof saveAllSettingsToCloud === 'function') {
-                    saveAllSettingsToCloud().catch(err => {
-                        console.warn('⚠️ [实时填表开关] 云端同步失败:', err);
-                    });
+            
                 }
             });
 
@@ -9850,8 +9798,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                 }
 
                 const isChecked = $(this).is(':checked');
-
-                // ✅ [UI互斥] 开启批量填表时，自动关闭实时填表
                 if (isChecked) {
                     $('#gg_auto_bf_settings').slideDown();
                     $('#gg_c_enabled').prop('checked', false);
@@ -10008,7 +9954,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
 
                     // ✨✨✨ [防冲突] 检查是否正在执行总结，避免快照冲突
                     if (window.isSummarizing) {
-                        console.log('⏸️ [实时填表] 检测到正在执行总结，延迟处理...');
                         // 延迟 2 秒后重新尝试
                         setTimeout(() => omsg(i), 2000);
                         return;
@@ -10149,20 +10094,14 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                                 console.log(`⚡ [写入] 识别到 ${cs.length} 条指令，正在写入表格...`);
                                 exe(cs);
                                 m.save(false, true); // 立即保存到本地存储（AI 生成的新记忆非常重要）
-
-                                // ✅ [修复] 实时填表只更新填表指针，不更新总结指针
-                                // 原因：实时填表不应该阻止自动总结触发，两者是独立的功能
                                 API_CONFIG.lastBackfillIndex = i;
                                 localStorage.setItem(AK, JSON.stringify(API_CONFIG));
 
                                 // ✅ 同步到云端，防止 loadConfig 回滚
                                 if (typeof saveAllSettingsToCloud === 'function') {
                                     saveAllSettingsToCloud().catch(err => {
-                                        console.warn('⚠️ [实时填表] 云端同步失败:', err);
                                     });
                                 }
-
-                                console.log(`✅ [实时填表] 填表指针已更新至第 ${i} 楼`);
                             } else {
                                 console.log(`Testing: 第 ${i} 楼无指令，保持基准状态。`);
                             }
@@ -10187,7 +10126,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                     }
 
                     // 🆕 [修复3] 确保在所有模式下都保存快照
-                    // 如果上面的实时填表模式没有执行（因为 C.autoBackfill = true），这里补充保存
                     if (C.enabled && C.autoBackfill && !snapshotHistory[msgKey]) {
                         const newSnapshot = {
                             data: m.all().slice(0, -1).map(sh => JSON.parse(JSON.stringify(sh.json()))),
@@ -11956,7 +11894,6 @@ updateRow(1, 0, {4: "王五销毁了图纸..."})
                         <div style="background:rgba(255,255,255,0.3); padding:10px; border-radius:6px; border:1px solid rgba(0,0,0,0.05);">
                             <div style="font-weight:bold; margin-bottom:4px; color:var(--g-tc); font-size:12px;">📊 填表模式 (二选一)</div>
                             <div style="font-size:11px; color:var(--g-tc); opacity:0.8;">
-                                • <strong>实时填表：</strong> 每次回复都写。优点是实时性强。<br>
                                 • <strong>批量填表：</strong> 每N楼写一次。优点是省Token。<br>
                                 <span style="opacity:0.6; font-size:10px;">(推荐开启批量填表 + 独立API)</span>
                             </div>
